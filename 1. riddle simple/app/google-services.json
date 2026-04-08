@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "178517169770",
+    "project_id": "impostor-80273",
+    "storage_bucket": "impostor-80273.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:178517169770:android:112c923d3d301308d21c13",
+        "android_client_info": {
+          "package_name": "com.ud.riddle"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAmnl-kYMJYr95F5qq8LLX9J-GQ2yCvMEQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
