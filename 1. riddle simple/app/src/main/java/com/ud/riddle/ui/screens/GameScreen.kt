@@ -32,13 +32,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ud.riddle.Service.GeminiService
+import com.ud.riddle.models.GameConfig
 import com.ud.riddle.models.Player
 import com.ud.riddle.models.enums.GameStateEnum
 import kotlinx.coroutines.launch
 
 
 @Composable
-fun GameScreen(padding: PaddingValues){
+fun GameScreen(padding: PaddingValues) {
     val context = LocalContext.current
     var name by remember { mutableStateOf("") }
 
@@ -53,12 +54,13 @@ fun GameScreen(padding: PaddingValues){
     val geminiService = remember { GeminiService() }
     var isLoading by remember { mutableStateOf(false) }
 
-    var categoriaSeleccionada by remember { mutableStateOf(geminiService.categorias.first()) }
+    // gameConfig se llena cuando GameConfigScreen llama a onCreateGame
+    var gameConfig by remember { mutableStateOf<GameConfig?>(null) }
 
-    when(gameState){
+    when (gameState) {
 
+        // ── 1. Agregar jugadores ──────────────────────────────────────────
         GameStateEnum.CREATING_PLAYERS -> {
-
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -66,24 +68,20 @@ fun GameScreen(padding: PaddingValues){
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
                 Card(
-                    modifier = Modifier
-                        .fillMaxWidth(0.85f),
+                    modifier = Modifier.fillMaxWidth(0.85f),
                     elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                 ) {
-
                     Column(
                         modifier = Modifier.padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-
-                        Text("Input a name a player")
+                        Text("Ingresa el nombre del jugador")
 
                         Spacer(modifier = Modifier.height(12.dp))
 
                         TextField(
-                            label = { Text("Player name") },
+                            label = { Text("Nombre") },
                             value = name,
                             onValueChange = { name = it }
                         )
@@ -96,139 +94,130 @@ fun GameScreen(padding: PaddingValues){
                                 name = ""
                             }
                         }) {
-                            Text("Add")
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // NUEVO: selector de categorías
-                        Text("Categoría:")
-                        Spacer(modifier = Modifier.height(8.dp))
-                        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            items(geminiService.categorias) { cat ->
-                                Button(
-                                    onClick = { categoriaSeleccionada = cat },
-                                    colors = if (categoriaSeleccionada == cat)
-                                        ButtonDefaults.buttonColors()
-                                    else
-                                        ButtonDefaults.buttonColors(
-                                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                ) {
-                                    Text(cat)
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Button(
-                            enabled = !isLoading && players.isNotEmpty(),
-                            onClick = {
-                                isLoading = true
-                                scope.launch {
-                                    try {
-                                        // CAMBIADO: pasa la categoría seleccionada
-                                        val wordFromApi = geminiService.generateSecretWord(categoriaSeleccionada)
-
-                                        if (wordFromApi == "cactus") {
-                                            Toast.makeText(context, "La API devolvió el valor por defecto", Toast.LENGTH_SHORT).show()
-                                        }
-
-                                        secret = wordFromApi
-
-                                        players.shuffle()
-                                        val randomPos = players.indices.random()
-                                        players.forEachIndexed { index, player ->
-                                            player.isImpostor = (index == randomPos)
-                                        }
-                                        impostorPosition = randomPos
-                                        gameState = GameStateEnum.SHOWING_CLUE
-
-                                    } catch (e: Exception) {
-                                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
-                                        secret = "error_red"
-                                    } finally {
-                                        isLoading = false
-                                    }
-                                }
-                            }
-                        ) {
-                            Text(if (isLoading) "Consultando IA..." else "Start")
+                            Text("Agregar")
                         }
 
                         Spacer(modifier = Modifier.height(16.dp))
 
                         if (players.isNotEmpty()) {
-                            Text("Players:")
+                            Text("Jugadores:")
+                            players.forEach { player -> Text(player.name) }
+                        }
 
-                            players.forEach { player ->
-                                Text(player.name)
-                            }
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Al pulsar Siguiente va a GameConfigScreen
+                        Button(
+                            enabled = players.isNotEmpty(),
+                            onClick = { gameState = GameStateEnum.GAME_CONFIG }
+                        ) {
+                            Text("Siguiente →")
                         }
                     }
                 }
             }
         }
+
+        // ── 2. Configurar partida ─────────────────────────────────────────
+        GameStateEnum.GAME_CONFIG -> {
+            GameConfigScreen(
+                onCreateGame = { config ->
+                    gameConfig = config
+                    isLoading = true
+                    scope.launch {
+                        try {
+                            val categoria = config.category.label
+                            val wordFromApi = geminiService.generateSecretWord(categoria)
+
+                            if (wordFromApi == "cactus") {
+                                Toast.makeText(
+                                    context,
+                                    "La API devolvió el valor por defecto",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+
+                            secret = wordFromApi
+
+                            players.shuffle()
+                            val randomPos = players.indices.random()
+                            players.forEachIndexed { index, player ->
+                                player.isImpostor = (index == randomPos)
+                            }
+                            impostorPosition = randomPos
+                            gameState = GameStateEnum.SHOWING_CLUE
+
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                            secret = "error_red"
+                        } finally {
+                            isLoading = false
+                        }
+                    }
+                }
+            )
+        }
+
+        // ── 3. Mostrar pistas ─────────────────────────────────────────────
         GameStateEnum.SHOWING_CLUE -> {
             currentPlayer = players[positionClue]
 
-            Column(modifier = Modifier.fillMaxSize().padding(padding),
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
                 verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Take phone ${currentPlayer?.name}")
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("Pasa el teléfono a ${currentPlayer?.name}")
 
                 Button(onClick = {
-                    val isImpostor = currentPlayer?.isImpostor
-
-                    if (isImpostor == true){
+                    if (currentPlayer?.isImpostor == true) {
                         Toast.makeText(context, "No tienes pista", Toast.LENGTH_LONG).show()
                     } else {
                         Toast.makeText(context, "Pista: $secret", Toast.LENGTH_LONG).show()
                     }
-                }) { Text("Show Clue") }
+                }) { Text("Ver pista") }
 
                 Button(onClick = {
                     currentPlayer = players[positionClue]
                     positionClue++
-
-                    if (positionClue == players.size){
+                    if (positionClue == players.size) {
                         positionClue = 0
                         gameState = GameStateEnum.IN_TURNS
                     }
-
-                }) { Text("Next") }
+                }) { Text("Siguiente") }
             }
         }
+
+        // ── 4. Turnos ─────────────────────────────────────────────────────
         GameStateEnum.IN_TURNS -> {
             currentPlayer = players[positionClue]
 
-            Text("Take phone ${currentPlayer.name}")
+            Text("Pasa el teléfono a ${currentPlayer.name}")
 
             Button(onClick = {
                 currentPlayer = players[positionClue]
                 positionClue++
-
-                if (positionClue == players.size){
+                if (positionClue == players.size) {
                     gameState = GameStateEnum.END
                 }
-
-            }) { Text("Next") }
+            }) { Text("Siguiente") }
         }
+
+        // ── 5. Fin ────────────────────────────────────────────────────────
         GameStateEnum.END -> {
             Button(onClick = {
                 val nameImpostor = impostorPosition?.let { players[it] }?.name
-                Toast.makeText(context, "Impostor $nameImpostor", Toast.LENGTH_LONG).show()
-
-            }) { Text("Show impostor") }
+                Toast.makeText(context, "Impostor: $nameImpostor", Toast.LENGTH_LONG).show()
+            }) { Text("Mostrar impostor") }
         }
     }
 }
 
 @Preview
 @Composable
-fun GameScreenPreview(){
+fun GameScreenPreview() {
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         GameScreen(innerPadding)
     }
