@@ -14,14 +14,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ud.riddle.models.GameConfig
+import com.ud.riddle.models.Game
 import com.ud.riddle.models.enums.GameCategory
 import com.ud.riddle.models.enums.GameLanguages
 import com.ud.riddle.models.enums.GameVisibility
 
 @Composable
 fun GameConfigScreen(
-    onCreateGame: (GameConfig) -> Unit
+    onCreateGame: (Game) -> Unit
 ) {
     var selectedCategory by remember { mutableStateOf(GameCategory.MOVIES) }
     var selectedLanguage by remember { mutableStateOf(GameLanguages.SPANISH) }
@@ -138,15 +138,13 @@ fun GameConfigScreen(
 
         Spacer(modifier = Modifier.height(28.dp))
 
-        // --- CTA ---
         Button(
             onClick = {
                 onCreateGame(
-                    GameConfig(
+                    Game(
                         category = selectedCategory,
                         language = selectedLanguage,
-                        visibility = selectedVisibility,
-                        roomCode = if (selectedVisibility == GameVisibility.PRIVATE) roomCode else null
+                        visibility = selectedVisibility
                     )
                 )
             },
@@ -159,8 +157,6 @@ fun GameConfigScreen(
         }
     }
 }
-
-// --- Subcomponentes ---
 
 @Composable
 private fun SectionLabel(text: String) {

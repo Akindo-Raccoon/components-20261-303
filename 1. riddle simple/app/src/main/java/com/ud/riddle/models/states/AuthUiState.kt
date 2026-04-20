@@ -1,4 +1,4 @@
-package com.ud.riddle.models
+package com.ud.riddle.models.states
 
 sealed class AuthUiState {
     object Idle : AuthUiState()

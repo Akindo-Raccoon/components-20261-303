@@ -25,16 +25,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.auth
-import com.ud.riddle.models.AuthUiState
+import com.ud.riddle.models.states.AuthUiState
 import com.ud.riddle.viewmodels.AuthViewModel
 
 @Composable
-fun LoginScreen(viewModel: AuthViewModel) {
+fun LoginScreen(viewModel: AuthViewModel ) {
     val uiState by viewModel.uiState.collectAsState()
 
     var email by remember { mutableStateOf("") }

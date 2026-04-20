@@ -9,17 +9,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -32,14 +29,42 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ud.riddle.Service.GeminiService
-import com.ud.riddle.models.GameConfig
+import com.ud.riddle.models.Game
 import com.ud.riddle.models.Player
 import com.ud.riddle.models.enums.GameStateEnum
+import com.ud.riddle.viewmodels.GameViewModel
 import kotlinx.coroutines.launch
 
 
+
 @Composable
-fun GameScreen(padding: PaddingValues) {
+fun GameScreen(viewModel: GameViewModel) {
+
+    val game by viewModel.gameState.collectAsState()
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+
+        Text("Código: ${game?.code}")
+        Text("Jugador 1: ${game?.player1}")
+        Text("Estado: ${game?.status}")
+
+        if (game?.status == GameStateEnum.WAITING) {
+            Text("Esperando jugador 2...")
+        }
+
+        if (game?.status == GameStateEnum.SHOWING_CLUE) {
+            Text("Partida iniciada")
+            GameScreenStart()
+        }
+    }
+}
+
+@Composable
+fun GameScreenStart() {
     val context = LocalContext.current
     var name by remember { mutableStateOf("") }
 
@@ -55,16 +80,16 @@ fun GameScreen(padding: PaddingValues) {
     var isLoading by remember { mutableStateOf(false) }
 
     // gameConfig se llena cuando GameConfigScreen llama a onCreateGame
-    var gameConfig by remember { mutableStateOf<GameConfig?>(null) }
+    var gameConfig by remember { mutableStateOf<Game?>(null) }
 
     when (gameState) {
-
+        GameStateEnum.WAITING -> {
+        }
         // ── 1. Agregar jugadores ──────────────────────────────────────────
         GameStateEnum.CREATING_PLAYERS -> {
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
+                    .fillMaxSize(),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -164,8 +189,7 @@ fun GameScreen(padding: PaddingValues) {
 
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
+                    .fillMaxSize(),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -212,13 +236,5 @@ fun GameScreen(padding: PaddingValues) {
                 Toast.makeText(context, "Impostor: $nameImpostor", Toast.LENGTH_LONG).show()
             }) { Text("Mostrar impostor") }
         }
-    }
-}
-
-@Preview
-@Composable
-fun GameScreenPreview() {
-    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-        GameScreen(innerPadding)
     }
 }
