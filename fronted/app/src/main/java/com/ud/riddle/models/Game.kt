@@ -14,5 +14,7 @@ data class Game(
     val player1: String = "",
     val player2: String = "",
     val turnPlayerId: String = "",
-    val winnerPlayerId: String = ""
+    val winnerPlayerId: String = "",
+    val word: String = "",
+    val clue: String = ""
 )

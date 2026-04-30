@@ -7,20 +7,20 @@ import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.database
 import com.ud.riddle.models.Game
 import com.ud.riddle.models.enums.GameStateEnum
-import kotlin.jvm.java
-import kotlin.to
 
 class FirebaseGameDataSource : GameDataSource {
     private val database = Firebase.database
     private val gameRef = database.getReference("games")
 
-    override fun createGame(playerId: String, onComplete: (String) -> Unit) {
+    override fun createGame(playerId: String, word: String, clue: String, onComplete: (String) -> Unit) {
         val code = gameRef.push().key ?: return
         val game = Game(
             code = code,
             player1 = playerId,
             status = GameStateEnum.WAITING,
-            turnPlayerId = playerId
+            turnPlayerId = playerId,
+            word = word,
+            clue = clue
         )
         gameRef.child(code).setValue(game).addOnSuccessListener {
             onComplete(code)
@@ -43,6 +43,6 @@ class FirebaseGameDataSource : GameDataSource {
     }
 
     override fun removeListener() {
-        TODO("Not yet implemented")
+        // Implementación del removelistener si es necesario
     }
 }
