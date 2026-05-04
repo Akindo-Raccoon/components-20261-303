@@ -7,9 +7,7 @@ plugins {
 
 android {
     namespace = "com.ud.riddle"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.ud.riddle"
@@ -67,4 +65,8 @@ dependencies {
 
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    
+    // Retrofit (Hardcoded to avoid version catalog issues for now)
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
 }
