@@ -8,7 +8,7 @@ import kotlinx.coroutines.withContext
 class GameDiscoveryRepository(
     private val apiService: GameApiService = GameApiService.create()
 ) {
-    suspend fun getRiddle(category: String, language: String): Result<GameDiscoveryResponse> {
+    suspend fun getDiscovery(category: String, language: String): Result<GameDiscoveryResponse> {
         return withContext(Dispatchers.IO) {
             try {
                 val response = apiService.getDiscovery(category, language)

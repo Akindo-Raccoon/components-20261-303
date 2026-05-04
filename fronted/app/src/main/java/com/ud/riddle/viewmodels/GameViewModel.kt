@@ -10,6 +10,7 @@ import com.ud.riddle.service.GameApiService
 import com.ud.riddle.models.Game
 import com.ud.riddle.models.states.GameUiState
 import com.ud.riddle.repositories.GameDataSource
+import com.ud.riddle.repositories.GameDiscoveryRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,7 +20,7 @@ import kotlinx.coroutines.launch
 class GameViewModel(
     application: Application,
     private val dataSource: GameDataSource,
-    private val apiService: GameApiService = GameApiService.create()
+    private val repositoryDiscovery: GameDiscoveryRepository = GameDiscoveryRepository()
 ) : AndroidViewModel(application) {
 
     private val userPrefs = UserPreferences(application)
@@ -46,21 +47,15 @@ class GameViewModel(
             try {
                 Log.d("RETROFIT_DEBUG", "Iniciando petición -> Categoria: $category, Idioma: $language")
 
-                // Llamada al servicio GameApiService
-                val response = apiService.getDiscovery(category, language)
+                val response = repositoryDiscovery.getDiscovery(category, language)
 
-                // LOG DETALLADO PARA VER QUE TRAE EL SERVICIO
-                Log.d("RETROFIT_DEBUG", "RESPUESTA RECIBIDA:")
-                Log.d("RETROFIT_DEBUG", "  - Palabra: ${response.word}")
-                Log.d("RETROFIT_DEBUG", "  - Pista: ${response.clue}")
-                Log.d("RETROFIT_DEBUG", "  - Categoria: ${response.category}")
-                Log.d("RETROFIT_DEBUG", "  - Idioma: ${response.language}")
-
-                // Creamos el juego con los datos del backend
-                dataSource.createGame(userId, response.word, response.clue) { code ->
-                    currentCode = code
-                    listenToGame(code)
+                response.onSuccess { gameDiscoveryResponse ->
+                    dataSource.createGame(userId, gameDiscoveryResponse.word, gameDiscoveryResponse.clue) { code ->
+                        currentCode = code
+                        listenToGame(code)
+                    }
                 }
+
             } catch (e: Exception) {
                 Log.e("RETROFIT_DEBUG", "ERROR AL CONSUMIR SERVICIO: ${e.message}")
                 e.printStackTrace()
