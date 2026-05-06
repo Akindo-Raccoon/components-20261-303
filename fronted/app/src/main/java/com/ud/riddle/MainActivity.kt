@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.ud.connect4ude.utils.UserPreferences
 import com.ud.riddle.models.states.AuthUiState
 import com.ud.riddle.ui.screens.LoginScreen
 import com.ud.riddle.ui.screens.RootScreen
@@ -24,15 +25,16 @@ class MainActivity : ComponentActivity() {
 
     private val authViewModel: AuthViewModel by viewModels()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+
+        super.onCreate(savedInstanceState)
+        val userPrefs = UserPreferences(this.application)
         enableEdgeToEdge()
 
         setContent {
             RiddleAppTheme {
-
-                val uiState by authViewModel.uiState.collectAsState()
+                val currentUser = userPrefs.getUser()
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize()
@@ -41,23 +43,28 @@ class MainActivity : ComponentActivity() {
                     Box(
                         modifier = Modifier.padding(innerPadding)
                     ) {
-                        when (uiState) {
+                        if (currentUser != null){
+                            RootScreen()
+                        } else {
+                            val uiState by authViewModel.uiState.collectAsState()
+                            when (uiState) {
 
-                            is AuthUiState.Success -> {
-                                RootScreen()
-                            }
-
-                            is AuthUiState.Loading -> {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator()
+                                is AuthUiState.Success -> {
+                                    RootScreen()
                                 }
-                            }
 
-                            else -> {
-                                LoginScreen(authViewModel)
+                                is AuthUiState.Loading -> {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator()
+                                    }
+                                }
+
+                                else -> {
+                                    LoginScreen(authViewModel)
+                                }
                             }
                         }
                     }

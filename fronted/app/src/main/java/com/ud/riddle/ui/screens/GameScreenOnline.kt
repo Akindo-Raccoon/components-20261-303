@@ -33,35 +33,11 @@ import com.ud.riddle.viewmodels.GameViewModel
 import kotlinx.coroutines.launch
 
 
-
 @Composable
-fun GameScreen(viewModel: GameViewModel) {
+fun GameScreenOnline(viewModel: GameViewModel) {
 
     val game by viewModel.gameState.collectAsState()
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-
-        Text("Código: ${game?.code}")
-        Text("Jugador 1: ${game?.player1}")
-        Text("Estado: ${game?.status}")
-
-        if (game?.status == GameStateEnum.WAITING) {
-            Text("Esperando jugador 2...")
-        }
-
-        if (game?.status == GameStateEnum.SHOWING_CLUE) {
-            Text("Partida iniciada")
-            GameScreenStart()
-        }
-    }
-}
-
-@Composable
-fun GameScreenStart() {
     val context = LocalContext.current
     var name by remember { mutableStateOf("") }
 
@@ -81,6 +57,7 @@ fun GameScreenStart() {
 
     when (gameState) {
         GameStateEnum.WAITING -> {
+            MatchScreen(viewModel)
         }
         // ── 1. Agregar jugadores ──────────────────────────────────────────
         GameStateEnum.CREATING_PLAYERS -> {

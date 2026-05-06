@@ -60,8 +60,6 @@ fun MatchScreen(viewModel: GameViewModel) {
                 Text("Crear partida")
             }
 
-        } else {
-            GameScreen(viewModel = viewModel)
         }
     }
 }

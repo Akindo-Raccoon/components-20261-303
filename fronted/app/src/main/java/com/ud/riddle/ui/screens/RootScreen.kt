@@ -29,6 +29,11 @@ fun RootScreen() {
             factory = GameViewModelFactory(application, isOnline!!)
         )
 
-        MatchScreen(viewModel = viewModel)
+        if (isOnline == true){
+            GameScreenOnline(viewModel = viewModel)
+        } else {
+            GameScreenOnlyOne(viewModel)
+        }
+
     }
 }
