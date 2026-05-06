@@ -10,7 +10,7 @@ data class Game(
     val language: GameLanguages = GameLanguages.SPANISH,
     val visibility: GameVisibility = GameVisibility.PUBLIC,
     val code: String = "",
-    val status: GameStateEnum = GameStateEnum.WAITING,
+    val status: GameStateEnum = GameStateEnum.CREATING_PLAYERS,
     val player1: String = "",
     val player2: String = "",
     val turnPlayerId: String = "",
